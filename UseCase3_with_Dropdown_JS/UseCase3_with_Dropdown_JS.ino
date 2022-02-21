@@ -28,7 +28,7 @@
 // Library Defines - Need to be defined before library import
 // ----------------------------
 
-#define ESP_DRD_USE_SPIFFS      true
+#define ESP_DRD_USE_SPIFFS true
 
 // ----------------------------
 // Standard Libraries - Already Installed if you have ESP32 set up
@@ -59,12 +59,11 @@
 // Search for "Arduino Json" in the Arduino Library manager
 // https://github.com/bblanchon/ArduinoJson
 
-
 // -------------------------------------
 // -------   Other Config   ------
 // -------------------------------------
 
-const int PIN_LED       = 2;
+const int PIN_LED = 2;
 
 #define JSON_CONFIG_FILE "/sample_config.json"
 
@@ -79,7 +78,7 @@ const int PIN_LED       = 2;
 
 // -----------------------------
 
-DoubleResetDetector* drd;
+DoubleResetDetector *drd;
 
 //flag for saving data
 bool shouldSaveConfig = false;
@@ -88,9 +87,10 @@ char testString[50] = "deafult value";
 int testNumber = 1500;
 bool testBool = true;
 int day = 3; // 0 == Monday etc
-char * daysOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+char *daysOfWeek[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
-void saveConfigFile() {
+void saveConfigFile()
+{
   Serial.println(F("Saving config"));
   StaticJsonDocument<512> json;
   json["testString"] = testString;
@@ -99,18 +99,21 @@ void saveConfigFile() {
   json["day"] = day;
 
   File configFile = SPIFFS.open(JSON_CONFIG_FILE, "w");
-  if (!configFile) {
+  if (!configFile)
+  {
     Serial.println("failed to open config file for writing");
   }
 
   serializeJsonPretty(json, Serial);
-  if (serializeJson(json, configFile) == 0) {
+  if (serializeJson(json, configFile) == 0)
+  {
     Serial.println(F("Failed to write to file"));
   }
   configFile.close();
 }
 
-bool loadConfigFile() {
+bool loadConfigFile()
+{
   //clean FS, for testing
   // SPIFFS.format();
 
@@ -122,18 +125,22 @@ bool loadConfigFile() {
   // it will only get called if it fails to mount, which probably means it needs to be
   // formatted, but maybe dont use this if you have something important saved on spiffs
   // that can't be replaced.
-  if (SPIFFS.begin(false) || SPIFFS.begin(true)) {
+  if (SPIFFS.begin(false) || SPIFFS.begin(true))
+  {
     Serial.println("mounted file system");
-    if (SPIFFS.exists(JSON_CONFIG_FILE)) {
+    if (SPIFFS.exists(JSON_CONFIG_FILE))
+    {
       //file exists, reading and loading
       Serial.println("reading config file");
       File configFile = SPIFFS.open(JSON_CONFIG_FILE, "r");
-      if (configFile) {
+      if (configFile)
+      {
         Serial.println("opened config file");
         StaticJsonDocument<512> json;
         DeserializationError error = deserializeJson(json, configFile);
         serializeJsonPretty(json, Serial);
-        if (!error) {
+        if (!error)
+        {
           Serial.println("\nparsed json");
 
           strcpy(testString, json["testString"]);
@@ -142,13 +149,16 @@ bool loadConfigFile() {
           day = json["day"].as<int>();
 
           return true;
-
-        } else {
+        }
+        else
+        {
           Serial.println("failed to load json config");
         }
       }
     }
-  } else {
+  }
+  else
+  {
     Serial.println("failed to mount FS");
   }
   //end read
@@ -156,14 +166,16 @@ bool loadConfigFile() {
 }
 
 //callback notifying us of the need to save config
-void saveConfigCallback () {
+void saveConfigCallback()
+{
   Serial.println("Should save config");
   shouldSaveConfig = true;
 }
 
 // This gets called when the config mode is launced, might
 // be useful to update a display with this info.
-void configModeCallback (WiFiManager *myWiFiManager) {
+void configModeCallback(WiFiManager *myWiFiManager)
+{
   Serial.println("Entered Conf Mode");
 
   Serial.print("Config SSID: ");
@@ -180,13 +192,15 @@ void setup()
   bool forceConfig = false;
 
   drd = new DoubleResetDetector(DRD_TIMEOUT, DRD_ADDRESS);
-  if (drd->detectDoubleReset()) {
+  if (drd->detectDoubleReset())
+  {
     Serial.println(F("Forcing config mode as there was a Double reset detected"));
     forceConfig = true;
   }
 
   bool spiffsSetup = loadConfigFile();
-  if (!spiffsSetup) {
+  if (!spiffsSetup)
+  {
     Serial.println(F("Forcing config mode as there is no saved config"));
     forceConfig = true;
   }
@@ -218,16 +232,18 @@ void setup()
   WiFiManagerParameter custom_text_box_num("key_num", "Enter your number here", convertedValue, 7); // 7 == max length
 
   //Check Box
-  char* customHtml;
-  if (testBool) {
+  char *customHtml;
+  if (testBool)
+  {
     customHtml = "type=\"checkbox\" checked";
-  } else {
+  }
+  else
+  {
     customHtml = "type=\"checkbox\"";
   }
   WiFiManagerParameter custom_checkbox("key_bool", "Checkbox", "T", 2, customHtml); // The "t" isn't really important, but if the
   // box is checked the value for this field will
   // be "t", so we can check for that.
-
 
   //Select menu (custom HTML)
   // The custom html options do not get handled the same way as other standard ones
@@ -235,7 +251,7 @@ void setup()
   // into a standard WM field that im hiding
   // Not sure if it's better or worse than the standard way
 
-  const char* day_select_str = R"(
+  const char *day_select_str = R"(
   <br/><label for='day'>Custom Field Label</label>
   <select name="dayOfWeek" id="day" onchange="document.getElementById('key_custom').value = this.value">
     <option value="0">Monday</option>
@@ -261,7 +277,7 @@ void setup()
   Serial.print(bufferStr);
 
   WiFiManagerParameter custom_field(bufferStr);
-  sprintf(convertedValue, "%d", day); // Need to convert to string to display a default value.
+  sprintf(convertedValue, "%d", day); // Need to convert to string to store a default value.
 
   WiFiManagerParameter custom_hidden("key_custom", "Will be hidden", convertedValue, 2);
 
@@ -275,16 +291,21 @@ void setup()
   Serial.println("hello");
 
   digitalWrite(PIN_LED, LOW);
-  if (forceConfig) {
-    if (!wm.startConfigPortal("WifiTetris", "clock123")) {
+  if (forceConfig)
+  {
+    if (!wm.startConfigPortal("WifiTetris", "clock123"))
+    {
       Serial.println("failed to connect and hit timeout");
       delay(3000);
       //reset and try again, or maybe put it to deep sleep
       ESP.restart();
       delay(5000);
     }
-  } else {
-    if (!wm.autoConnect("WifiTetris", "clock123")) {
+  }
+  else
+  {
+    if (!wm.autoConnect("WifiTetris", "clock123"))
+    {
       Serial.println("failed to connect and hit timeout");
       delay(3000);
       // if we still have not connected restart and try all over again
@@ -316,9 +337,12 @@ void setup()
   //Handle the bool value
   testBool = (strncmp(custom_checkbox.getValue(), "T", 1) == 0);
   Serial.print("testBool: ");
-  if (testBool) {
+  if (testBool)
+  {
     Serial.println("true");
-  } else {
+  }
+  else
+  {
     Serial.println("false");
   }
 
@@ -334,6 +358,7 @@ void setup()
   }
 }
 
-void loop() {
+void loop()
+{
   drd->loop();
 }
